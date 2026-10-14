@@ -8,7 +8,7 @@
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
-  const fmt = new Intl.NumberFormat('en-US');
+  const ar = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 
   /* ---------- Full-screen mobile sheet ---------- */
   const sheet = $('#sheet');
@@ -32,59 +32,18 @@
   $$('a', sheet).forEach(a => a.addEventListener('click', closeSheet));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
-  /* ---------- Island: hide on scroll down, show on scroll up; scroll-spy ---------- */
-  const island = $('#island');
-  const islandLinks = $$('.island__links a');
-  // scroll-spy only applies to in-page (#hash) links; page links are marked active in the HTML
-  const hashLinks = islandLinks.filter(a => /^#.+/.test(a.getAttribute('href')));
-  if (hashLinks.length) {
-    const spy = new IntersectionObserver(entries => {
-      entries.forEach(en => {
-        if (!en.isIntersecting) return;
-        hashLinks.forEach(a => a.classList.toggle('is-active', a.getAttribute('href') === '#' + en.target.id));
-      });
-    }, { rootMargin: '-45% 0px -50% 0px' });
-    hashLinks.map(a => $(a.getAttribute('href'))).filter(Boolean).forEach(s => spy.observe(s));
-  }
 
   /* ---------- Scroll-linked (single rAF) ---------- */
   const toTop = $('.to-top2');
-  const road = $('.road');
-  const roadBar = $('#road-bar');
-  let lastY = scrollY, ticking = false, hidden = false, showTop = false, vh = innerHeight;
-  let roadTop = 0, roadH = 1;
-
-  function measure() {
-    vh = innerHeight;
-    if (road) {
-      const r = road.getBoundingClientRect();
-      roadTop = r.top + scrollY; roadH = r.height;
-    }
-    update();
-  }
+  let ticking = false, showTop = false, vh = innerHeight;
   function update() {
     ticking = false;
-    const y = scrollY;
-    const hide = y > 200 && y > lastY + 4 && !sheet.classList.contains('is-open');
-    const show = y < lastY - 4 || y < 200;
-    if (hide && !hidden) { hidden = true; island.classList.add('is-hidden'); }
-    else if (show && hidden) { hidden = false; island.classList.remove('is-hidden'); }
-    if (Math.abs(y - lastY) > 4) lastY = y;
-
-    const t = y > vh;
+    const t = scrollY > vh;
     if (t !== showTop) { showTop = t; toTop.classList.toggle('is-visible', t); }
-
-    if (road && roadBar) {
-      const p = Math.min(1, Math.max(0, (y + vh * 0.7 - roadTop) / roadH));
-      roadBar.style.transform = `scaleX(${p.toFixed(3)})`;
-    }
   }
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
-  addEventListener('resize', () => requestAnimationFrame(measure), { passive: true });
-  new ResizeObserver(() => requestAnimationFrame(measure)).observe(document.body);
-  measure();
-  // keyboard / link focus inside the page should always reveal the island
-  island.addEventListener('focusin', () => { hidden = false; island.classList.remove('is-hidden'); });
+  addEventListener('resize', () => { vh = innerHeight; requestAnimationFrame(update); }, { passive: true });
+  update();
 
   /* ---------- Reveal ---------- */
   const revealer = new IntersectionObserver(entries => {
@@ -100,11 +59,11 @@
       if (!en.isIntersecting) return;
       const el = en.target, end = +el.dataset.count;
       counter.unobserve(el);
-      if (reduceMotion) { el.textContent = end; return; }
+      if (reduceMotion) { el.textContent = ar(end); return; }
       const start = performance.now();
       const tick = now => {
         const t = Math.min(1, (now - start) / 1200);
-        el.textContent = Math.round(end * (1 - Math.pow(1 - t, 3)));
+        el.textContent = ar(Math.round(end * (1 - Math.pow(1 - t, 3))));
         if (t < 1) requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
@@ -146,7 +105,7 @@
 
   /* ---------- Cards: cursor spotlight (keep this list in sync with the card list in the CSS) ---------- */
   if (finePointer) {
-    $$('.supply-card, .pillar2, .vtile, .clients2 > li:not(.clients2__cta), .step2, .phase2, .tile--stat, .tile--values, .about-mission, .bento--about .tile--wide').forEach(card => {
+    $$('.supply-card, .pillar2, .vtile, .tile--stat, .tile--values, .about-mission, .bento--about .tile--wide, .steps-lite > li').forEach(card => {
       let pending = false, mx = 0, my = 0, rect = null;
       card.addEventListener('pointerenter', () => { rect = card.getBoundingClientRect(); });
       card.addEventListener('pointermove', e => {
@@ -165,63 +124,6 @@
     });
   }
 
-  /* ---------- Process: sticky stepper follows the active step ---------- */
-  const steps = $$('.step2');
-  const stepNum = $('#stepper-num');
-  const stepIcon = $('#stepper-icon use');
-  const dots = $$('#stepper-dots i');
-  const stepImgs = $$('#stepper-media img');
-  let activeStep = -1;
-  if (steps.length && stepNum) {
-    function setStep(i) {
-      if (i === activeStep) return;
-      activeStep = i;
-      steps.forEach((s, k) => s.classList.toggle('is-active', k === i));
-      dots.forEach((d, k) => d.classList.toggle('is-on', k <= i));
-      stepImgs.forEach((im, k) => im.classList.toggle('is-on', k === i));
-      stepNum.classList.add('is-swap');
-      setTimeout(() => {
-        stepNum.textContent = String(i + 1).padStart(2, '0');
-        stepIcon.setAttribute('href', '#' + steps[i].dataset.icon);
-        stepNum.classList.remove('is-swap');
-      }, 180);
-    }
-    const stepObs = new IntersectionObserver(entries => {
-      entries.forEach(en => { if (en.isIntersecting) setStep(steps.indexOf(en.target)); });
-    }, { rootMargin: '-45% 0px -45% 0px' });
-    steps.forEach(s => stepObs.observe(s));
-    setStep(0);
-  }
-
-  /* ---------- Accordion: only one open (fallback for browsers without details[name]) ---------- */
-  const details = $$('.acc details');
-  details.forEach(d => d.addEventListener('toggle', () => {
-    if (d.open) details.forEach(o => { if (o !== d) o.open = false; });
-  }));
-
-  /* ---------- Calculator ---------- */
-  const spend = $('#c-spend-in'), rate = $('#c-rate-in');
-  const presets = $$('.presets button');
-  const o = { spend: $('#c-spend'), rate: $('#c-rate'), total: $('#c-total'), client: $('#c-client'), ours: $('#c-ours') };
-  let calcPending = false;
-  if (spend && rate) {
-    const paint = i => i.style.setProperty('--fill', ((i.value - i.min) / (i.max - i.min) * 100) + '%');
-    function calc() {
-      calcPending = false;
-      const s = +spend.value, total = Math.round(s * +rate.value / 100);
-      o.spend.textContent = fmt.format(s) + ' ج.م';
-      o.rate.textContent = rate.value + '%';
-      o.total.textContent = fmt.format(total);
-      o.client.textContent = fmt.format(Math.round(total * .6)) + ' ج.م';
-      o.ours.textContent = fmt.format(Math.round(total * .4)) + ' ج.م';
-      presets.forEach(b => b.classList.toggle('is-on', +b.dataset.v === s));
-      paint(spend); paint(rate);
-    }
-    const queue = () => { if (!calcPending) { calcPending = true; requestAnimationFrame(calc); } };
-    [spend, rate].forEach(i => i.addEventListener('input', queue));
-    presets.forEach(b => b.addEventListener('click', () => { spend.value = b.dataset.v; queue(); }));
-    calc();
-  }
 
   /* ---------- Form → mail app ---------- */
   const form = $('#form2'), msg = $('#form2-msg');
@@ -250,5 +152,5 @@
     $$('input', form).forEach(i => i.addEventListener('input', () => i.classList.remove('is-invalid')));
   }
 
-  $('#year').textContent = new Date().getFullYear();
+  $('#year').textContent = ar(new Date().getFullYear());
 })();
