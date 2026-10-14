@@ -27,11 +27,12 @@
     document.body.style.overflow = '';
     setTimeout(() => { sheet.hidden = true; }, reduceMotion ? 0 : 400);
   }
-  menuBtn.addEventListener('click', openSheet);
-  $('.sheet__close').addEventListener('click', closeSheet);
-  $$('a', sheet).forEach(a => a.addEventListener('click', closeSheet));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
-
+  if (sheet && menuBtn) {
+    menuBtn.addEventListener('click', openSheet);
+    $('.sheet__close').addEventListener('click', closeSheet);
+    $$('a', sheet).forEach(a => a.addEventListener('click', closeSheet));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+  }
 
   /* ---------- Scroll-linked (single rAF) ---------- */
   const toTop = $('.to-top2');
@@ -39,7 +40,7 @@
   function update() {
     ticking = false;
     const t = scrollY > vh;
-    if (t !== showTop) { showTop = t; toTop.classList.toggle('is-visible', t); }
+    if (t !== showTop && toTop) { showTop = t; toTop.classList.toggle('is-visible', t); }
   }
   addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
   addEventListener('resize', () => { vh = innerHeight; requestAnimationFrame(update); }, { passive: true });
@@ -105,7 +106,7 @@
 
   /* ---------- Cards: cursor spotlight (keep this list in sync with the card list in the CSS) ---------- */
   if (finePointer) {
-    $$('.supply-card, .pillar2, .vtile, .tile--stat, .tile--values, .about-mission, .bento--about .tile--wide, .steps-lite > li').forEach(card => {
+    $$('.supply-card, .pillar2, .vtile, .tile--stat, .tile--values, .about-mission, .bento--about .tile--wide, .steps-lite > li, .ab-clients > li, .mv-value').forEach(card => {
       let pending = false, mx = 0, my = 0, rect = null;
       card.addEventListener('pointerenter', () => { rect = card.getBoundingClientRect(); });
       card.addEventListener('pointermove', e => {
@@ -123,7 +124,6 @@
       card.addEventListener('pointerleave', () => { rect = null; });
     });
   }
-
 
   /* ---------- Form → mail app ---------- */
   const form = $('#form2'), msg = $('#form2-msg');
@@ -145,12 +145,12 @@
       }
       const body = ['الاسم: ' + data.get('name'), 'الشركة: ' + (data.get('company') || '—'), 'الهاتف: ' + data.get('phone'),
         'نوع الخدمة: ' + data.get('service'), '', data.get('message') || ''].join('\n');
-      location.href = 'mailto:info@dakan-zaman.com?subject=' + encodeURIComponent('طلب عرض سعر — ' + (data.get('company') || data.get('name'))) + '&body=' + encodeURIComponent(body);
+      location.href = 'mailto:' + ((window.SITE && SITE.emails[0]) || 'info@dakan-zaman.com') + '?subject=' + encodeURIComponent('طلب عرض سعر — ' + (data.get('company') || data.get('name'))) + '&body=' + encodeURIComponent(body);
       msg.className = 'form2__msg is-ok';
       msg.textContent = 'شكرًا لكم! تم تجهيز طلبكم في تطبيق البريد لإرساله.';
     });
     $$('input', form).forEach(i => i.addEventListener('input', () => i.classList.remove('is-invalid')));
   }
 
-  $('#year').textContent = ar(new Date().getFullYear());
+  const year = $('#year'); if (year) year.textContent = ar(new Date().getFullYear());
 })();
