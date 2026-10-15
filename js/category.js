@@ -47,10 +47,6 @@
   const services = cat.services.map((s, k) => `
           <li class="tile" data-reveal style="--d:${(k * 0.05).toFixed(2)}s"><b>${ar(k + 1)}</b><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p></li>`).join('');
 
-  const tabs = cats.map(c => c === cat
-    ? `<a href="category.html?c=${esc(c.id)}" class="is-active" aria-current="page">${esc(c.title)}</a>`
-    : `<a href="category.html?c=${esc(c.id)}">${esc(c.title)}</a>`).join('');
-
   main.innerHTML = `
     <section class="page-hero2">
       <div class="wrap cat-hero">
@@ -69,8 +65,6 @@
         </figure>
       </div>
     </section>
-
-    <nav class="wrap cat-tabs" aria-label="مجالات التوريد">${tabs}</nav>
 
     <section class="sec" id="products">
       <div class="wrap">
@@ -114,8 +108,12 @@
     if (img.src.indexOf(img.dataset.fallback) === -1) img.src = img.dataset.fallback;
   }, { once: true }));
 
-  // galleries: arrows, dots and swipe (native scroll-snap); works in RTL, where scrollLeft runs negative
-  main.querySelectorAll('.prod-gal').forEach(gal => {
+  // galleries: arrows, dots, swipe (native scroll-snap; RTL scrollLeft runs negative) and autoplay.
+  // Autoplay: each gallery moves on its own, a little out of step with its neighbours; it pauses while the
+  // card is hovered or touched, when it is off-screen or the tab is hidden, and never runs for reduced motion.
+  const AUTOPLAY = 3200;
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  main.querySelectorAll('.prod-gal').forEach((gal, gi) => {
     const track = gal.querySelector('.prod-gal__track'), slides = [...track.children];
     if (slides.length < 2) return;
     const dots = [...gal.querySelectorAll('.prod-gal__dots button')];
@@ -135,10 +133,22 @@
     gal.querySelector('.prod-gal__btn--prev').addEventListener('click', () => go(index() - 1));
     gal.querySelector('.prod-gal__btn--next').addEventListener('click', () => go(index() + 1));
     dots.forEach((d, k) => d.addEventListener('click', () => go(k)));
+
+    if (reduceMotion) return;
+    const card = gal.closest('.prod-card');
+    let timer = 0, hovered = false, visible = false;
+    const schedule = (wait = AUTOPLAY) => {
+      clearTimeout(timer);
+      if (hovered || !visible || document.hidden) return;
+      timer = setTimeout(() => { go(index() + 1); schedule(); }, wait);
+    };
+    card.addEventListener('mouseenter', () => { hovered = true; schedule(); });
+    card.addEventListener('mouseleave', () => { hovered = false; schedule(); });
+    track.addEventListener('touchstart', () => { hovered = true; schedule(); }, { passive: true });
+    track.addEventListener('touchend', () => { setTimeout(() => { hovered = false; schedule(); }, 2500); }, { passive: true });
+    gal.addEventListener('click', () => schedule());          // a manual step restarts the countdown
+    document.addEventListener('visibilitychange', () => schedule());
+    new IntersectionObserver(([en]) => { visible = en.isIntersecting; schedule(AUTOPLAY + (gi % 3) * 700); }, { threshold: .5 }).observe(gal);
   });
 
-  // keep the current area's tab in view on small screens (works in RTL too)
-  const strip = main.querySelector('.cat-tabs'), on = strip.querySelector('.is-active');
-  const a = on.getBoundingClientRect(), s = strip.getBoundingClientRect();
-  strip.scrollBy({ left: (a.left + a.width / 2) - (s.left + s.width / 2) });
 })();

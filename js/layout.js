@@ -29,6 +29,7 @@ window.SITE = {
     { href: 'index.html', label: 'الرئيسية' },
     { href: 'categories.html', label: 'مجالات التوريد', match: ['category.html'] },
     { href: 'about.html', label: 'من نحن' },
+    { href: 'clients.html', label: 'عملاؤنا' },
     { href: 'contact.html', label: 'تواصل معنا', navbar: false, footer: false },
   ],
   navButton: { href: 'contact.html', label: 'تواصل معنا' },     // الزر البرتقالي في الشريط العلوي
@@ -43,7 +44,7 @@ window.SITE = {
   // ---- صفحات التواصل الاجتماعي (أيقونات بألوانها الأصلية في الفوتر، تفتح في تبويب جديد)
   //      ضع رابط صفحة الشركة مكان الرابط العام (مثال: 'https://www.facebook.com/اسم-الصفحة')، واحذف السطر لإخفاء الأيقونة
   social: [
-    { key: 'facebook', name: 'فيسبوك', icon: 'i-facebook', href: 'https://www.facebook.com/' },
+    { key: 'facebook', name: 'فيسبوك', icon: 'i-facebook', href: 'https://www.facebook.com/profile.php?id=61595169910489' },
     { key: 'instagram', name: 'إنستجرام', icon: 'i-instagram', href: 'https://www.instagram.com/' },
     { key: 'linkedin', name: 'لينكدإن', icon: 'i-linkedin', href: 'https://www.linkedin.com/' },
   ],
@@ -55,6 +56,8 @@ window.SITE = {
     'i-facebook': 'viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></symbol>',
     'i-instagram': 'viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/></symbol>',
     'i-linkedin': 'viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></symbol>',
+    'i-briefcase': 'viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></symbol>',
+    'i-shopping-bag': 'viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>',
     'i-download': 'viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>',
     'i-arrow': 'viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"></path></symbol>',
     'i-award': 'viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"></circle><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11"></path></symbol>',
@@ -129,10 +132,12 @@ window.SITE = {
     <a href="${S.menuButton.href}" class="pill pill--orange pill--lg sheet__cta">${S.menuButton.label} ${ico('i-arrow')}</a>
   </div>`;
 
-  const contactItems = (links) => [
-    `<li>${ico('i-phone')}${links ? `<a href="tel:${S.phone.tel}" dir="ltr">${S.phone.display}</a>` : `<span><small>مكالمات</small><span dir="ltr">${S.phone.display}</span></span>`}</li>`,
-    links ? '' : `<li>${ico('i-whatsapp', 'ico ico--wa')}<span><small>واتساب</small><span dir="ltr">${S.whatsapp.display}</span></span></li>`,
-    ...S.emails.map(e => `<li>${ico('i-mail')}${links ? `<a href="mailto:${e}">${e}</a>` : `<span>${e}</span>`}</li>`),
+  // contact details: phone → dialer, WhatsApp → chat (new tab), e-mail → mail app.
+  // footer = with labels and the WhatsApp line; card = the contact page's orange card (no WhatsApp line)
+  const contactItems = (card) => [
+    `<li>${ico('i-phone')}<a href="tel:${S.phone.tel}">${card ? '' : '<small>مكالمات</small>'}<span dir="ltr">${S.phone.display}</span></a></li>`,
+    card ? '' : `<li>${ico('i-whatsapp', 'ico ico--wa')}<a href="${waLink}" target="_blank" rel="noopener"><small>واتساب</small><span dir="ltr">${S.whatsapp.display}</span></a></li>`,
+    ...S.emails.map(e => `<li>${ico('i-mail')}<a href="mailto:${e}">${e}</a></li>`),
     `<li>${ico('i-pin')}<span>${S.address}</span></li>`,
   ].filter(Boolean).join('\n          ');
 
@@ -140,7 +145,7 @@ window.SITE = {
   <footer class="foot">
     <div class="wrap foot__grid">
       <div class="foot__brand">
-        <img class="foot__logo" src="assets/logos/logo-dark.svg" alt="Dokan Zaman" width="160" height="64" loading="lazy">
+        <img class="foot__logo" src="assets/logos/logo.svg" alt="Dokan Zaman" width="160" height="64" loading="lazy">
         <p class="foot__tagline">${S.tagline}</p>
         <p class="foot__msg">${S.message}</p>
         ${(S.social || []).length ? `<ul class="foot__social" aria-label="تابعونا">
