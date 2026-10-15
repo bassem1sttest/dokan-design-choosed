@@ -1027,59 +1027,29 @@ button, input, select, textarea { font: inherit; color: inherit; }
 #cat-page { min-height: 100vh; }
 
 /* =========================================================
-   CLIENTS — logo carousel (js/clients.js)
-   4 logos per view → 3 → 2; auto-advances, pauses on hover / touch
+   CLIENTS — two rows of logos sliding in opposite directions (like the homepage ticker)
    ========================================================= */
-.cl-carousel { --per: 1; position: relative; }   /* one large slide at a time */
-/* the slides are built by script: hold their height from the start so the page does not jump (slide + dots + bar) */
-.cl-carousel { min-height: calc(min(var(--wrap), 100vw - 32px) * 3 / 8 + 96px); }
-@media (max-width: 960px) { .cl-carousel { min-height: calc((100vw - 32px) / 2 + 96px); } }
-@media (max-width: 560px) { .cl-carousel { min-height: calc((100vw - 32px) * 2 / 3 + 96px); } }
-.cl-track {
-  display: flex; gap: var(--gap); overflow-x: auto; padding: 8px 2px 14px;
-  scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; overscroll-behavior-x: contain;
+.logo-marquee {
+  display: grid; gap: var(--gap);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
 }
-.cl-track::-webkit-scrollbar { display: none; }
-.cl-track:focus-visible { outline: 3px solid var(--orange); outline-offset: 4px; border-radius: var(--r); }
-.cl-slide { flex: 0 0 calc((100% - (var(--per) - 1) * var(--gap)) / var(--per)); margin: 0; scroll-snap-align: start; }
-.cl-card {
-  aspect-ratio: 8 / 3; display: grid; place-items: center; padding: var(--pad); overflow: hidden;
+.lm__row { overflow: hidden; padding: 6px 0; }
+.lm__track { display: flex; width: max-content; animation: marquee 45s linear infinite; }
+.lm__track--rev { animation-direction: reverse; animation-duration: 55s; }
+.logo-marquee ul { display: flex; gap: var(--gap); padding-inline-end: var(--gap); }
+.logo-marquee li {
+  width: 220px; height: 120px; flex: none; display: grid; place-items: center; padding: 18px 24px;
   transition: transform .4s var(--ease), box-shadow .4s, border-color .3s;
 }
-.cl-card img { width: 100%; height: 100%; max-width: 58%; max-height: 62%; object-fit: contain; transition: transform .6s var(--ease); }
-.cl-card { position: relative; }
-.tile.cl-card.cl-card--photo { padding: 0; }
-/* photos fill the whole slide at every screen size (stronger than the logo sizing in the media queries) */
-.cl-card.cl-card--photo img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; object-fit: cover; }
-.cl-slide:hover .cl-card { border-color: rgba(243,114,33,.45); box-shadow: var(--shadow); }
-.cl-slide:hover .cl-card img { transform: scale(1.03); }
-
-.cl-controls { display: flex; align-items: center; justify-content: center; margin-top: 10px; }
-/* arrows on the image: hidden until the slide is hovered or focused, always shown on touch screens */
-.cl-stage { position: relative; }
-.cl-btn {
-  position: absolute; z-index: 3; top: calc(50% - 3px); transform: translateY(-50%);
-  width: 48px; height: 48px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
-  background: rgba(255,255,255,.95); color: var(--heading); box-shadow: 0 10px 24px -10px rgba(0,0,0,.45);
-  opacity: 0; transition: opacity .25s, background-color .25s, color .25s, transform .2s;
+.logo-marquee li img { max-width: 100%; max-height: 72px; object-fit: contain; }
+.logo-marquee li:hover { transform: translateY(-4px); border-color: rgba(243,114,33,.45); box-shadow: var(--shadow); }
+.logo-marquee:hover .lm__track { animation-play-state: paused; }
+@media (max-width: 600px) {
+  .logo-marquee li { width: 160px; height: 92px; padding: 14px 18px; }
+  .logo-marquee li img { max-height: 56px; }
 }
-.cl-btn--prev { right: 18px; }
-.cl-btn--next { left: 18px; }
-.cl-btn .ico { width: 20px; height: 20px; stroke-width: 2.2; }
-.cl-btn--prev .ico { transform: rotate(180deg); }
-.cl-stage:hover .cl-btn, .cl-stage:focus-within .cl-btn { opacity: 1; }
-.cl-btn:hover { background: var(--orange); color: #fff; }
-.cl-btn:active { transform: translateY(-50%) scale(.92); }
-@media (hover: none) { .cl-btn { opacity: .92; width: 38px; height: 38px; } .cl-btn--prev { right: 10px; } .cl-btn--next { left: 10px; } }
-.cl-dots { display: flex; align-items: center; gap: 8px; }
-.cl-dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 99px; background: var(--chip); cursor: pointer; transition: width .35s var(--ease), background-color .3s; }
-.cl-dots button[aria-current] { width: 26px; background: var(--orange); }
-.cl-progress { height: 3px; margin: 16px auto 0; max-width: 220px; border-radius: 3px; background: var(--chip); overflow: hidden; }
-.cl-progress span { display: block; height: 100%; background: var(--orange); transform: scaleX(0); transform-origin: right; }
-
-@media (max-width: 960px) { .cl-card { aspect-ratio: 2 / 1; } .cl-card img { max-width: 70%; } }
-@media (max-width: 560px) { .cl-card { aspect-ratio: 3 / 2; } .cl-card img { max-width: 84%; max-height: 66%; } }
-@media (prefers-reduced-motion: reduce) { .cl-progress { display: none; } }
+@media (prefers-reduced-motion: reduce) { .lm__track { animation: none; } }
 
 /* SECTORS WE SERVE (about + clients pages) — five equal cards in one row */
 .ab-clients { grid-template-columns: repeat(5, 1fr); }

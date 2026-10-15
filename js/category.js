@@ -20,9 +20,13 @@
   const meta = document.querySelector('meta[name="description"]');
   if (meta) meta.content = `${cat.title} من دكان زمان للتوريدات العمومية: ${cat.summary}`;
 
-  const price = p => (p.price === null || p.price === undefined || p.price === '')
-    ? 'السعر عند الطلب'
-    : `<span class="num">${money(p.price)}</span> ${esc(C.currency)}` + (p.unit ? ` <small>${esc(p.unit)}</small>` : '');
+  // price: [from, to] → «من ٥٨ إلى ٩٢ ج.م»; one number → «٧٥ ج.م»; empty → «السعر عند الطلب»
+  const price = p => {
+    if (p.price === null || p.price === undefined || p.price === '') return 'السعر عند الطلب';
+    const unit = p.unit ? ` <small>${esc(p.unit)}</small>` : '';
+    if (Array.isArray(p.price)) return `من <span class="num">${money(p.price[0])}</span> إلى <span class="num">${money(p.price[1])}</span> ${esc(C.currency)}` + unit;
+    return `<span class="num">${money(p.price)}</span> ${esc(C.currency)}` + unit;
+  };
 
   // product photos: the first is the main one, the rest are reached with the arrows / dots / a swipe
   const photos = p => (p.images && p.images.length ? p.images : [p.image || cat.image]);
